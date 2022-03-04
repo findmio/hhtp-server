@@ -30,4 +30,4 @@ program.parse(process.argv)
 
 program.on('--help', displayUsage)
 
-new HttpServer(program.opts()).createServer();
+new HttpServer(program.opts()).start();
