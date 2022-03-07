@@ -1,9 +1,13 @@
-import fs from 'fs';
 import chalk from 'chalk';
 import path from 'path';
-const pkg = JSON.parse(fs.readFileSync(path.resolve(process.argv[1], '../../package.json'), 'utf-8'));
 import http from 'http';
 import os from 'os';
+import open from 'open';
+import ejs from 'ejs';
+import fs from 'fs/promises';
+
+import { srcPath } from './utils/path.js';
+import { getVersion } from './utils/package.js';
 
 const networkInterfaces = os.networkInterfaces();
 
@@ -11,40 +15,86 @@ export default class HttpServer {
   constructor(options) {
     this.version = options.version;
     this.port = options.port;
+    this.addresses = [];
+    this.runAddress = process.cwd();
+
+    this.getAddress();
   }
+
   start() {
     if (this.version) {
-      console.log(pkg.version);
+      console.log(getVersion);
       return;
     }
     this.createServer();
   }
-  printNetwork() {
-    const addresses = [];
-    Object.keys(networkInterfaces).forEach(function (dev) {
-      networkInterfaces[dev].forEach(function (details) {
+
+  getAddress() {
+    Object.keys(networkInterfaces).forEach((dev) => {
+      networkInterfaces[dev].forEach((details) => {
         if (details.family === 'IPv4') {
-          addresses.push(details.address)
+          this.addresses.push(`http://${details.address}:${this.port}`)
         }
       });
     });
+  }
 
+  openLink() {
+    open(this.addresses[0]);
+  }
+
+  printNetwork() {
     console.log(chalk.yellow('\nAvailable on:'));
-
-    addresses.forEach(item => {
-      console.log(chalk.green(`  http://${item}:${this.port}`));
+    this.addresses.forEach(item => {
+      console.log(chalk.green(`  ${item}`));
     })
   }
-  createServer() {
-    const server = http.createServer((req, res) => {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        data: 'Hello World!'
-      }));
+
+  resolvePath(url) {
+    return path.join(this.runAddress, url)
+  }
+
+  renderHtml() {
+    return new Promise((resolve, reject) => {
+      const payload = {
+        runAddress: this.runAddress,
+      }
+      ejs.renderFile(path.resolve(srcPath, 'templates/index.html'), payload, {}, function (err, str) {
+        if (err) {
+          reject(err);
+        }
+        resolve(str);
+      });
+    })
+  }
+
+  async createServer() {
+    const html = await this.renderHtml();
+
+    const server = http.createServer(async (req, res) => {
+      if (req.url === '/favicon.ico') {
+        const icon = await fs.readFile(path.join(srcPath, 'assets/favicon.ico'))
+        res.end(icon);
+        return;
+      }
+
+      const currentPath = this.resolvePath(req.url);
+
+      const status = await fs.stat(currentPath);
+
+      // TODO：处理本地文件
+      if (status.isFile()) {
+
+      }
+
+      res.end(html);
     });
+
     server.listen(this.port);
 
     this.printNetwork();
+    this.renderHtml();
+    this.openLink();
 
     console.log(chalk.yellow('\nHit CTRL-C to stop the server'));
   }

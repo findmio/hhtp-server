@@ -16,7 +16,10 @@ cd http-server
 npm link
 ```
 
-
+帮助：
+```bash
+http-server --help
+```
 
 用法：
 
