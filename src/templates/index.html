@@ -6,26 +6,115 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>
-    <%=runAddress%>
+    <%= runAddress %>
   </title>
+
   <style>
     body {
-      box-sizing: border-box;
-      max-height: 100vh;
-      height: 100vh;
-      overflow-y: scroll;
-      padding: 10vh 10vw;
+      padding: 0;
       margin: 0;
+    }
+
+    .root {
+      box-sizing: border-box;
+      padding: 6vh 10vw 10vh 10vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      margin-bottom: 2vh;
+    }
+
+    main {
+      flex: 1;
+      overflow-y: scroll;
+    }
+
+    a:visited {
+      color: #000;
+    }
+
+    svg {
+      width: 14px;
+      height: 14px;
+      margin-right: 6px;
+    }
+
+    .line {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .name {
+      font-size: 16px;
+      line-height: 16px;
+    }
+
+    .goBack {
+      margin: 8px 0 8px 20px;
     }
   </style>
 </head>
 
 <body>
-  <h2>
-    <%=runAddress%>
-  </h2>
+  <div class="root">
 
-  hello world
+    <header>
+      <%= runAddress %>
+    </header>
+
+    <main>
+      <div class="goBack">
+        <a href="">......</a>
+      </div>
+
+      <% for(let i=0;i<paths.dirs.length;i++){ %>
+        <div class="line">
+          <svg t="1646748563016" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+            p-id="803" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200">
+            <defs>
+              <style type="text/css"></style>
+            </defs>
+            <path d="M895.8 592.1a32.2 32.1 0 1 0 64.4 0 32.2 32.1 0 1 0-64.4 0Z" fill="#515151" p-id="804"></path>
+            <path
+              d="M928 687.9c-17.8 0-32.2 14.4-32.2 32.1v80.7c0 35.3-28.7 64-64 64H192.5c-35.3 0-64-28.7-64-64V225c0-35.3 28.7-64 64-64H415l82.7 143.3c6.6 11.4 19.2 17.2 31.5 15.8h302.5c35.3 0 64 28.7 64 64v80c0 17.7 14.4 32.1 32.2 32.1s32.2-14.4 32.2-32.1c0-0.8 0-1.6-0.1-2.4v-77.5C960 329 925.1 282 876.1 264v-1c0-68.2-55.8-124-124-124H476.2l-14.8-25.7c-7.4-12.9-18-16.2-27.3-16l-0.1-0.1H192.1c-70.7 0-128 57.3-128 128v574.1c0 70.7 57.3 128 128 128h640c70.7 0 128-57.3 128-128v-76.9c0.1-0.8 0.1-1.6 0.1-2.4 0-17.7-14.4-32.1-32.2-32.1zM747.1 202.8c31.6 0 58 23.2 63.1 53.4H543.9l-30.8-53.4h234z"
+              fill="#515151" p-id="805"></path>
+          </svg>
+          <a class="name" href="">
+            <%= paths.dirs[i] %>
+          </a>
+        </div>
+        <% } %>
+
+          <% for(let i=0;i<paths.files.length;i++){ %>
+            <div class="line">
+              <a href="">
+                <svg t="1646732464810" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                  xmlns="http://www.w3.org/2000/svg" p-id="845" xmlns:xlink="http://www.w3.org/1999/xlink" width="128"
+                  height="128">
+                  <defs>
+                    <style type="text/css"></style>
+                  </defs>
+                  <path d="M96.1 575.7a32.2 32.1 0 1 0 64.4 0 32.2 32.1 0 1 0-64.4 0Z" fill="#4D4D4D" p-id="846"></path>
+                  <path
+                    d="M742.1 450.7l-269.5-2.1c-14.3-0.1-26 13.8-26 31s11.7 31.3 26 31.4l269.5 2.1c14.3 0.1 26-13.8 26-31s-11.7-31.3-26-31.4zM742.1 577.7l-269.5-2.1c-14.3-0.1-26 13.8-26 31s11.7 31.3 26 31.4l269.5 2.1c14.3 0.2 26-13.8 26-31s-11.7-31.3-26-31.4z"
+                    fill="#4D4D4D" p-id="847"></path>
+                  <path
+                    d="M736.1 63.9H417c-70.4 0-128 57.6-128 128h-64.9c-70.4 0-128 57.6-128 128v128c-0.1 17.7 14.4 32 32.2 32 17.8 0 32.2-14.4 32.2-32.1V320c0-35.2 28.8-64 64-64H289v447.8c0 70.4 57.6 128 128 128h255.1c-0.1 35.2-28.8 63.8-64 63.8H224.5c-35.2 0-64-28.8-64-64V703.5c0-17.7-14.4-32.1-32.2-32.1-17.8 0-32.3 14.4-32.3 32.1v128.3c0 70.4 57.6 128 128 128h384.1c70.4 0 128-57.6 128-128h65c70.4 0 128-57.6 128-128V255.9l-193-192z m0.1 63.4l127.7 128.3H800c-35.2 0-64-28.8-64-64v-64.3h0.2z m64 641H416.1c-35.2 0-64-28.8-64-64v-513c0-35.2 28.8-64 64-64H671V191c0 70.4 57.6 128 128 128h65.2v385.3c0 35.2-28.8 64-64 64z"
+                    fill="#4D4D4D" p-id="848"></path>
+                </svg>
+                <a class="name" href="">
+                  <%= paths.files[i] %>
+                </a>
+              </a>
+            </div>
+            <% } %>
+    </main>
+  </div>
 </body>
 
 </html>
