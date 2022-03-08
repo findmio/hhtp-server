@@ -5,6 +5,8 @@ import os from 'os';
 import open from 'open';
 import ejs from 'ejs';
 import fs from 'fs/promises';
+import mime from 'mime';
+import { createReadStream } from 'fs';
 
 import { srcPath } from './utils/path.js';
 import { getVersion } from './utils/package.js';
@@ -50,15 +52,9 @@ export default class HttpServer {
     })
   }
 
-  resolvePath(url) {
-    return path.join(this.runAddress, url)
-  }
 
-  renderHtml() {
+  renderHtml(payload) {
     return new Promise((resolve, reject) => {
-      const payload = {
-        runAddress: this.runAddress,
-      }
       ejs.renderFile(path.resolve(srcPath, 'templates/index.html'), payload, {}, function (err, str) {
         if (err) {
           reject(err);
@@ -68,8 +64,40 @@ export default class HttpServer {
     })
   }
 
+  async isFile(path) {
+    return (await fs.stat(path)).isFile();
+  }
+
+  async renderDir(req, res, currentPath) {
+    const dirs = await fs.readdir(currentPath);
+    const paths = { files: [], dirs: [] };
+
+    for (const dir of dirs) {
+      const isFile = await this.isFile(path.join(this.runAddress, req.url, dir))
+      if (isFile) {
+        paths.files.push(dir)
+      } else {
+        paths.dirs.push(dir);
+      }
+    }
+
+    const payload = {
+      runAddress: this.runAddress,
+      srcPath,
+      paths
+    }
+
+    const html = await this.renderHtml(payload);
+
+    res.end(html);
+  }
+
+  renderFile(req, res, currentPath) {
+    res.setHeader('Content-Type', mime.getType(currentPath) + ';charset=utf-8');
+    createReadStream(currentPath).pipe(res);
+  }
+
   async createServer() {
-    const html = await this.renderHtml();
 
     const server = http.createServer(async (req, res) => {
       if (req.url === '/favicon.ico') {
@@ -78,22 +106,18 @@ export default class HttpServer {
         return;
       }
 
-      const currentPath = this.resolvePath(req.url);
+      const currentPath = path.join(this.runAddress, decodeURIComponent(req.url));
 
-      const status = await fs.stat(currentPath);
-
-      // TODO：处理本地文件
-      if (status.isFile()) {
-
+      if (await this.isFile(currentPath)) {
+        this.renderFile(req, res, currentPath);
+      } else {
+        this.renderDir(req, res, currentPath);
       }
-
-      res.end(html);
     });
 
     server.listen(this.port);
 
     this.printNetwork();
-    this.renderHtml();
     this.openLink();
 
     console.log(chalk.yellow('\nHit CTRL-C to stop the server'));
