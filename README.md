@@ -27,3 +27,10 @@ http-server --help
 http-server [path] [options]
 ```
 
+TODO：
+
+- [x] 文本类文件预览
+- [ ] 实现返回上级
+- [ ] 添加路由调整
+- [ ] 发布 npm
+- [ ] 添加更多指令
