@@ -35,7 +35,7 @@ export default class HttpServer {
     Object.keys(networkInterfaces).forEach((dev) => {
       networkInterfaces[dev].forEach((details) => {
         if (details.family === 'IPv4') {
-          this.addresses.push(`http://${details.address}:${this.port}`)
+          this.addresses.push(`http://${details.address}:${this.port}`);
         }
       });
     });
@@ -52,7 +52,6 @@ export default class HttpServer {
     })
   }
 
-
   renderHtml(payload) {
     return new Promise((resolve, reject) => {
       ejs.renderFile(path.resolve(srcPath, 'templates/index.html'), payload, {}, function (err, str) {
@@ -64,18 +63,14 @@ export default class HttpServer {
     })
   }
 
-  async isFile(path) {
-    return (await fs.stat(path)).isFile();
-  }
-
   async renderDir(req, res, currentPath) {
     const dirs = await fs.readdir(currentPath);
     const paths = { files: [], dirs: [] };
 
     for (const dir of dirs) {
-      const isFile = await this.isFile(path.join(this.runAddress, req.url, dir))
+      const isFile = (await fs.stat(path.join(this.runAddress, req.url, dir))).isFile();
       if (isFile) {
-        paths.files.push(dir)
+        paths.files.push(dir);
       } else {
         paths.dirs.push(dir);
       }
@@ -92,24 +87,30 @@ export default class HttpServer {
     res.end(html);
   }
 
-  renderFile(req, res, currentPath) {
+  renderFile(req, res, currentPath, fileStat) {
+    const eTag = fileStat.mtimeMs.toString(16) + '-' + fileStat.size.toString(16);
+    res.setHeader('Etag', eTag);
+    const ifNoneMatch = req.headers['if-none-match'];
+    if (ifNoneMatch === eTag) {
+      res.statusCode = 304;
+      return res.end();
+    }
     res.setHeader('Content-Type', mime.getType(currentPath) + ';charset=utf-8');
     createReadStream(currentPath).pipe(res);
   }
 
   async createServer() {
-
     const server = http.createServer(async (req, res) => {
       if (req.url === '/favicon.ico') {
-        const icon = await fs.readFile(path.join(srcPath, 'assets/favicon.ico'))
+        res.setHeader('Cache-Control', 'max-age=31536000');
+        const icon = await fs.readFile(path.join(srcPath, 'assets/favicon.ico'));
         res.end(icon);
         return;
       }
-
       const currentPath = path.join(this.runAddress, decodeURIComponent(req.url));
-
-      if (await this.isFile(currentPath)) {
-        this.renderFile(req, res, currentPath);
+      const pathStat = await fs.stat(currentPath);
+      if (pathStat.isFile()) {
+        this.renderFile(req, res, currentPath, pathStat);
       } else {
         this.renderDir(req, res, currentPath);
       }

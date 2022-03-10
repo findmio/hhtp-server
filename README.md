@@ -30,6 +30,7 @@ http-server [path] [options]
 TODO：
 
 - [x] 文本类文件预览
+- [x] 添加协商缓存
 - [ ] 实现返回上级
 - [ ] 添加路由调整
 - [ ] 发布 npm
